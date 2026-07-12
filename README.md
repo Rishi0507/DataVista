@@ -1,4 +1,4 @@
-# DataVista
+# DataVista: End-to-end Pipeline
 
 An end-to-end retail analytics case study, built in two parts: first on synthetic data to prove
 the pipeline works end to end, then re-applied to a real, third-party dataset to test whether the
