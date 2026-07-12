@@ -1,0 +1,5 @@
+Final: 2,500 customers | 276,484 baskets | 2,595,732 basket items
+
+Customers: 1699 of 2500 households have NO demographic record (real gap in source data, filled 'Unknown')
+Baskets: 276,484 distinct shopping trips built from 2,595,732 line items
+Basket items: 0 of 2,595,732 line items have no matching product record

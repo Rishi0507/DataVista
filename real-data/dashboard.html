@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Datavista</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#1B2A4A;
+    --ink-soft:#2E3F63;
+    --paper:#F7F5EF;
+    --panel:#FFFFFF;
+    --marigold:#E8973E;
+    --marigold-soft:#FBEBD4;
+    --teal:#3E7C7C;
+    --teal-soft:#E1EEEC;
+    --coral:#D45B45;
+    --coral-soft:#FBE4DE;
+    --line:#E4E0D6;
+    --text:#22252B;
+    --text-mute:#6B7180;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .shell{display:flex; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:230px; flex-shrink:0; background:var(--ink); color:#EDEBE3;
+    padding:28px 20px; position:sticky; top:0; height:100vh;
+    display:flex; flex-direction:column;
+  }
+  .brand{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:19px; letter-spacing:-0.01em;}
+  .brand span{color:var(--marigold);}
+  .brand-sub{font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:#9BA3BD; margin-top:4px; letter-spacing:0.02em;}
+  nav{margin-top:36px; display:flex; flex-direction:column; gap:2px;}
+  .nav-item{
+    font-size:13.5px; padding:10px 12px; border-radius:7px; cursor:pointer;
+    color:#C6CADC; transition:background .15s, color .15s; font-weight:500;
+    display:flex; align-items:center; gap:9px;
+  }
+  .nav-item .dot{width:5px; height:5px; border-radius:50%; background:#5A628A; flex-shrink:0;}
+  .nav-item:hover{background:rgba(255,255,255,0.06); color:#fff;}
+  .nav-item.active{background:rgba(232,151,62,0.16); color:var(--marigold);}
+  .nav-item.active .dot{background:var(--marigold);}
+  .sidebar-foot{margin-top:auto; font-size:11px; color:#7F87A6; line-height:1.5; padding-top:20px; border-top:1px solid rgba(255,255,255,0.08);}
+
+  /* Main*/
+  main{flex:1; padding:34px 42px 60px; max-width:1180px;}
+  .page-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:26px; flex-wrap:wrap; gap:12px;}
+  .page-title{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:26px;}
+  .page-desc{color:var(--text-mute); font-size:13.5px; margin-top:4px; max-width:600px;}
+  .refresh{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--text-mute); background:var(--panel); border:1px solid var(--line); padding:7px 12px; border-radius:20px;}
+
+  .section{display:none;}
+  .section.active{display:block; animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  /* KPI cards*/
+  .kpi-row{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:24px;}
+  .kpi-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
+  .kpi-label{font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-mute); font-weight:600;}
+  .kpi-value{font-family:'Space Grotesk', sans-serif; font-size:26px; font-weight:700; margin-top:8px;}
+  .kpi-delta{font-family:'IBM Plex Mono', monospace; font-size:11.5px; margin-top:6px; color:var(--teal);}
+  .kpi-delta.down{color:var(--coral);}
+
+  /* Panels  */
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:22px 24px; margin-bottom:20px;}
+  .panel-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; flex-wrap:wrap; gap:6px;}
+  .panel-title{font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15.5px;}
+  .panel-note{font-size:12px; color:var(--text-mute);}
+  canvas{max-width:100%;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-mute); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--line);}
+  td{padding:9px 10px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono', monospace; font-size:12.5px;}
+  td.label{font-family:'IBM Plex Sans', sans-serif; font-weight:500;}
+  tr:last-child td{border-bottom:none;}
+  .tag{display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; font-family:'IBM Plex Sans', sans-serif;}
+  .tag.champions{background:var(--marigold-soft); color:#9A5F13;}
+  .tag.loyal{background:var(--teal-soft); color:#255050;}
+  .tag.risk{background:var(--coral-soft); color:#9A3A26;}
+  .tag.hib{background:#EDEBE5; color:#6B7180;}
+  .tag.new{background:#E5EAF7; color:#3B4E8C;}
+  .tag.attn{background:#F3EEDF; color:#8A7327;}
+
+  /* ---------- Verdict card ---------- */
+  .verdict{
+    border:1px dashed var(--teal); border-radius:12px; background:var(--teal-soft);
+    padding:22px 26px; position:relative; margin-bottom:20px;
+  }
+  .verdict-stamp{
+    position:absolute; top:18px; right:22px; font-family:'IBM Plex Mono', monospace;
+    font-size:11px; font-weight:600; color:var(--teal); border:1.5px solid var(--teal);
+    border-radius:6px; padding:4px 10px; transform:rotate(4deg); letter-spacing:0.04em;
+    max-width:220px; text-align:right;
+  }
+  .verdict-title{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:17px; color:#1F4747; max-width:600px;}
+  .verdict-body{font-size:13.5px; color:#1F4747; margin-top:10px; line-height:1.6; max-width:700px;}
+  .verdict-stats{display:flex; gap:28px; margin-top:16px; flex-wrap:wrap;}
+  .vstat-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:#3F6B6B;}
+  .vstat-value{font-family:'IBM Plex Mono', monospace; font-size:16px; font-weight:600; color:#1F4747; margin-top:2px;}
+
+  .method-note{font-size:12px; color:var(--text-mute); background:#F2F0E8; border-radius:8px; padding:12px 14px; margin-top:14px; line-height:1.6;}
+  .method-note b{color:var(--text);}
+  .load-error{font-size:12.5px; color:var(--coral); background:var(--coral-soft); border-radius:8px; padding:10px 14px;}
+
+  @media(max-width:900px){
+    .shell{flex-direction:column;}
+    .sidebar{width:100%; height:auto; position:relative; flex-direction:row; overflow-x:auto; padding:16px;}
+    nav{flex-direction:row; margin-top:0; gap:6px;}
+    .sidebar-foot{display:none;}
+    main{padding:24px 18px;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div>
+      <div class="brand">Data<span>Vista</span></div>
+      <div class="brand-sub" id="brandSub">ANALYTICS</div>
+    </div>
+    <nav>
+      <div class="nav-item active" data-target="overview"><span class="dot"></span>Overview</div>
+      <div class="nav-item" data-target="segments"><span class="dot"></span>Customer Segments</div>
+      <div class="nav-item" data-target="retention"><span class="dot"></span>Retention</div>
+      <div class="nav-item" data-target="campaign"><span class="dot"></span>Campaign Test</div>
+      <div class="nav-item" data-target="category"><span class="dot"></span>Department Breakdown</div>
+      <div class="nav-item" data-target="stores"><span class="dot"></span>Store Performance</div>
+    </nav>
+    <div class="sidebar-foot" id="sidebarFoot">
+      Data warehouse: SQLite (datavista.db)<br>
+      Built by Rishi Popawala
+    </div>
+  </aside>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section class="section active" id="overview">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Business Overview</div>
+          <div class="page-desc">Household-level grocery performance snapshot across revenue, baskets, and active households.</div>
+        </div>
+        <div class="refresh" id="refreshTag">—</div>
+      </div>
+      <div class="kpi-row" id="kpiRow"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Monthly Net Revenue</div>
+          <div class="panel-note" id="revenueRangeNote">USD, monthly</div>
+        </div>
+        <canvas id="revenueChart" height="90"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Revenue by Department</div>
+          <div class="panel-note">Top departments by net revenue</div>
+        </div>
+        <canvas id="categoryChart" height="80"></canvas>
+      </div>
+    </section>
+
+    <!-- SEGMENTS -->
+    <section class="section" id="segments">
+      <div class="page-head">
+        <div>
+          <div class="page-title">RFM Customer Segmentation</div>
+          <div class="page-desc">Recency / Frequency / Monetary quintile scoring, bucketed into six lifecycle segments via SQL window functions.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Revenue Contribution by Segment</div></div>
+        <canvas id="rfmChart" height="90"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Segment Breakdown</div></div>
+        <table id="rfmTable"><thead><tr><th>Segment</th><th>Households</th><th>Avg LTV</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="method-note"><b>Method:</b> recency_days, frequency, and monetary value computed per household, each scored 1–5 via <code>NTILE(5)</code>. Segments follow the standard RFM heuristic (e.g. Champions = top quintile on all three axes).</div>
+    </section>
+
+    <!-- RETENTION -->
+    <section class="section" id="retention">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Cohort Retention</div>
+          <div class="page-desc">% of each signup cohort still placing orders N months after signup, averaged across all cohorts.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Average Retention Curve (Month 0–6)</div></div>
+        <canvas id="retentionChart" height="90"></canvas>
+      </div>
+      <div class="method-note" id="retentionNote"></div>
+    </section>
+
+    <!-- CAMPAIGN -->
+    <section class="section" id="campaign">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Campaign A/B Test</div>
+          <div class="page-desc" id="campaignDesc"></div>
+        </div>
+      </div>
+      <div class="verdict" id="verdictCard"></div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Avg. Revenue per Household: Recipients vs. Non-recipients</div><div class="panel-note" id="campaignWindowNote"></div></div>
+        <canvas id="campaignChart" height="90"></canvas>
+      </div>
+      <div class="method-note" id="campaignNote"></div>
+    </section>
+
+    <!-- DEPARTMENT BREAKDOWN -->
+    <section class="section" id="category">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Department Breakdown</div>
+          <div class="page-desc">Line items, revenue, and average line value by department.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <table id="categoryTable">
+          <thead><tr><th>Department</th><th>Line Items</th><th>Revenue</th><th>Avg Line Value</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- STORES -->
+    <section class="section" id="stores">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Store Performance</div>
+          <div class="page-desc">Revenue per household by store: top stores by household count.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <canvas id="storeChart" height="90"></canvas>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="embedded_data.js"></script>
+<script>
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+Chart.defaults.color = '#6B7180';
+Chart.defaults.font.size = 11.5;
+
+const usd = n => '$' + Math.round(n).toLocaleString('en-US');
+const usdM = n => '$' + (n/1000000).toFixed(2) + 'M';
+const pct = n => n + '%';
+
+function safe(label, fn){
+  try { fn(); }
+  catch(err){
+    console.error(`[dashboard] "${label}" failed:`, err);
+    const target = document.querySelector(`[data-error-slot="${label}"]`);
+    if(target) target.innerHTML = `<div class="load-error">Could not render "${label}" — data field missing or malformed. See console for details.</div>`;
+  }
+}
+
+// nav
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById(item.dataset.target).classList.add('active');
+  });
+});
+
+// header & sidebar
+safe('header meta', ()=>{
+  const years = [...DATA.kpi_by_year].sort((a,b)=>a.order_year.localeCompare(b.order_year));
+  const first = years[0].order_year, last = years[years.length-1].order_year;
+  document.getElementById('brandSub').textContent = `ANALYTICS · ${first}–${last}`;
+  document.getElementById('refreshTag').textContent = `${first} – ${last}`;
+  document.getElementById('sidebarFoot').innerHTML = `
+    Data warehouse: SQLite (datavista.db)<br>
+    ${DATA.totals.total_customers.toLocaleString('en-US')} households · ${DATA.totals.total_baskets.toLocaleString('en-US')} baskets<br>
+    Built by Rishi Popawala
+  `;
+});
+
+// kpi cards 
+safe('kpi cards', ()=>{
+  const years = [...DATA.kpi_by_year].sort((a,b)=>a.order_year.localeCompare(b.order_year));
+  const yPrev = years[0];
+  const yLast = years[years.length-1];
+  const revGrowth = ((yLast.net_revenue - yPrev.net_revenue)/yPrev.net_revenue*100).toFixed(1);
+  const hhGrowth = ((yLast.active_households - yPrev.active_households)/yPrev.active_households*100).toFixed(1);
+  const basketGrowth = (yLast.avg_basket_value - yPrev.avg_basket_value).toFixed(2);
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Total Net Revenue</div><div class="kpi-value">${usdM(DATA.totals.total_revenue)}</div><div class="kpi-delta">${years[0].order_year}–${years[years.length-1].order_year} combined</div></div>
+    <div class="kpi-card"><div class="kpi-label">${yLast.order_year} Revenue Growth</div><div class="kpi-value">${revGrowth>=0?'+':''}${revGrowth}%</div><div class="kpi-delta ${revGrowth<0?'down':''}">vs. ${yPrev.order_year} (${usdM(yPrev.net_revenue)} → ${usdM(yLast.net_revenue)})</div></div>
+    <div class="kpi-card"><div class="kpi-label">Active Households (${yLast.order_year})</div><div class="kpi-value">${yLast.active_households.toLocaleString('en-US')}</div><div class="kpi-delta ${hhGrowth<0?'down':''}">${hhGrowth>=0?'+':''}${hhGrowth}% vs. ${yPrev.order_year}</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Basket Value (${yLast.order_year})</div><div class="kpi-value">${usd(yLast.avg_basket_value)}</div><div class="kpi-delta ${basketGrowth<0?'down':''}">${basketGrowth>=0?'+':''}${usd(basketGrowth)} vs. ${yPrev.order_year}</div></div>
+  `;
+});
+
+// revenue trend
+safe('revenue trend', ()=>{
+  new Chart(document.getElementById('revenueChart'), {
+    type:'line',
+    data:{
+      labels: DATA.monthly_revenue.map(d=>d.ym),
+      datasets:[{
+        data: DATA.monthly_revenue.map(d=>d.revenue),
+        borderColor:'#E8973E', backgroundColor:'rgba(232,151,62,0.12)',
+        fill:true, tension:0.3, pointRadius:0, borderWidth:2.5
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>usd(c.raw)}}},
+      scales:{
+        y:{ticks:{callback:v=>usd(v)}, grid:{color:'#EEEBE0'}},
+        x:{grid:{display:false}, ticks:{maxRotation:0, autoSkip:true, maxTicksLimit:12}}
+      }
+    }
+  });
+});
+
+// dept revenue
+safe('department revenue chart', ()=>{
+  const topDepts = [...DATA.category_breakdown]
+    .filter(d=>d.DEPARTMENT.trim().length>0)
+    .sort((a,b)=>b.revenue-a.revenue)
+    .slice(0,10);
+  new Chart(document.getElementById('categoryChart'), {
+    type:'bar',
+    data:{
+      labels: topDepts.map(d=>d.DEPARTMENT),
+      datasets:[{data: topDepts.map(d=>d.revenue), backgroundColor:'#3E7C7C', borderRadius:5, maxBarThickness:34}]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>usd(c.raw)}}},
+      scales:{x:{ticks:{callback:v=>usd(v)}, grid:{color:'#EEEBE0'}}, y:{grid:{display:false}}}
+    }
+  });
+});
+
+// ---- RFM ----
+const segColors = {
+  'Champions':'#E8973E','Loyal Customers':'#3E7C7C','At Risk (high value)':'#D45B45',
+  'Hibernating':'#B7BAC4','New / Promising':'#5C74C7','Needs Attention':'#C7A94B'
+};
+safe('rfm chart', ()=>{
+  new Chart(document.getElementById('rfmChart'), {
+    type:'bar',
+    data:{
+      labels: DATA.rfm_rollup.map(d=>d.rfm_segment),
+      datasets:[{data: DATA.rfm_rollup.map(d=>d.segment_revenue), backgroundColor: DATA.rfm_rollup.map(d=>segColors[d.rfm_segment]||'#999'), borderRadius:6, maxBarThickness:52}]
+    },
+    options:{
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>usd(c.raw)}}},
+      scales:{y:{ticks:{callback:v=>usd(v)}, grid:{color:'#EEEBE0'}}, x:{grid:{display:false}, ticks:{font:{size:10.5}}}}
+    }
+  });
+});
+const tagClass = {'Champions':'champions','Loyal Customers':'loyal','At Risk (high value)':'risk','Hibernating':'hib','New / Promising':'new','Needs Attention':'attn'};
+safe('rfm table', ()=>{
+  document.querySelector('#rfmTable tbody').innerHTML = DATA.rfm_rollup.map(d=>`
+    <tr><td class="label"><span class="tag ${tagClass[d.rfm_segment]||''}">${d.rfm_segment}</span></td><td>${d.customers.toLocaleString('en-US')}</td><td>${usd(d.avg_ltv)}</td></tr>
+  `).join('');
+});
+
+// ---- Retention ----
+safe('retention chart', ()=>{
+  new Chart(document.getElementById('retentionChart'), {
+    type:'line',
+    data:{
+      labels: DATA.avg_retention_curve.map(d=>'Month '+d.month_index),
+      datasets:[{data: DATA.avg_retention_curve.map(d=>d.retention_pct), borderColor:'#3E7C7C', backgroundColor:'rgba(62,124,124,0.12)', fill:true, tension:0.35, pointRadius:4, pointBackgroundColor:'#3E7C7C', borderWidth:2.5}]
+    },
+    options:{
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>pct(c.raw)}}},
+      scales:{y:{ticks:{callback:v=>pct(v)}, grid:{color:'#EEEBE0'}, suggestedMax:100}, x:{grid:{display:false}}}
+    }
+  });
+  const curve = DATA.avg_retention_curve;
+  const m6 = curve.find(d=>d.month_index===6);
+  document.getElementById('retentionNote').innerHTML = `<b>Reading it:</b> Month 0 is the signup month itself (100% by definition). Retention settles to roughly <b>${m6?m6.retention_pct:'—'}%</b> by Month 6, which is the natural point to trigger win-back campaigns before further decay.`;
+});
+
+// ---- Campaign verdict + chart ----
+safe('campaign section', ()=>{
+  const c = DATA.campaign_ab_test;
+  document.getElementById('campaignDesc').textContent =
+    `Campaign ${c.campaign_id}: window ${c.window_start} – ${c.window_end}, compared against baseline ${c.baseline_start} – ${c.baseline_end}. `+
+    `${c.recipients.toLocaleString('en-US')} recipients vs. ${c.non_recipients.toLocaleString('en-US')} non-recipients. `+
+    `Recipients were not randomly assigned, so a difference-in-differences (DiD) design is used to isolate the incremental effect.`;
+
+  document.getElementById('verdictCard').innerHTML = `
+    <div class="verdict-stamp">${c.verdict_stamp}</div>
+    <div class="verdict-title">${c.verdict_title}</div>
+    <div class="verdict-body">${c.verdict_body}</div>
+    <div class="verdict-stats">
+      <div><div class="vstat-label">Recipient avg. revenue</div><div class="vstat-value">${usd(c.treatment_avg_revenue)}</div></div>
+      <div><div class="vstat-label">Non-recipient avg. revenue</div><div class="vstat-value">${usd(c.control_avg_revenue)}</div></div>
+      <div><div class="vstat-label">Recipient conversion</div><div class="vstat-value">${pct(c.treatment_conversion_rate_pct)}</div></div>
+      <div><div class="vstat-label">Non-recipient conversion</div><div class="vstat-value">${pct(c.control_conversion_rate_pct)}</div></div>
+      <div><div class="vstat-label">DiD incremental effect</div><div class="vstat-value">${usd(c.did_estimate)} / hh</div></div>
+    </div>
+  `;
+
+  document.getElementById('campaignWindowNote').textContent = `${c.window_start} – ${c.window_end}`;
+  document.getElementById('campaignNote').innerHTML = `<b>Note:</b> ${c.note} DiD t-statistic = ${c.did_t_statistic}, p = ${c.did_p_value}.`;
+
+  new Chart(document.getElementById('campaignChart'), {
+    type:'bar',
+    data:{
+      labels:['Recipients', 'Non-recipients'],
+      datasets:[{
+        data:[c.treatment_avg_revenue, c.control_avg_revenue],
+        backgroundColor:['#3E7C7C','#B7BAC4'], borderRadius:6, maxBarThickness:90
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:x=>usd(x.raw)+' per household'}}},
+      scales:{y:{ticks:{callback:v=>usd(v)}, grid:{color:'#EEEBE0'}}, x:{grid:{display:false}}}
+    }
+  });
+});
+
+// ---- Department Breakdown table ----
+safe('department table', ()=>{
+  const rows = [...DATA.category_breakdown]
+    .filter(d=>d.DEPARTMENT.trim().length>0)
+    .sort((a,b)=>b.revenue-a.revenue)
+    .slice(0,25);
+  document.querySelector('#categoryTable tbody').innerHTML = rows.map(d=>`
+    <tr>
+      <td class="label">${d.DEPARTMENT}</td>
+      <td>${d.line_items.toLocaleString('en-US')}</td>
+      <td>${usd(d.revenue)}</td>
+      <td>${usd(d.avg_line_value)}</td>
+    </tr>
+  `).join('');
+});
+
+// ---- Store Performance ----
+safe('store chart', ()=>{
+  const topStores = [...DATA.store_performance].sort((a,b)=>b.revenue_per_household-a.revenue_per_household).slice(0,15);
+  new Chart(document.getElementById('storeChart'), {
+    type:'bar',
+    data:{
+      labels: topStores.map(d=>`Store ${d.store_id}`),
+      datasets:[{data: topStores.map(d=>d.revenue_per_household), backgroundColor:'#E8973E', borderRadius:6, maxBarThickness:34}]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:x=>usd(x.raw)+' / household'}}},
+      scales:{x:{ticks:{callback:v=>usd(v)}, grid:{color:'#EEEBE0'}}, y:{grid:{display:false}}}
+    }
+  });
+});
+</script>
+</body>
+</html>

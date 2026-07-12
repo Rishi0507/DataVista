@@ -1,0 +1,604 @@
+const DATA = {
+  "kpi_by_year": [
+    {
+      "order_year": "2016",
+      "total_baskets": 129158,
+      "active_households": 2497,
+      "net_revenue": 3645902.74,
+      "avg_basket_value": 28.23
+    },
+    {
+      "order_year": "2017",
+      "total_baskets": 147326,
+      "active_households": 2479,
+      "net_revenue": 4411560.34,
+      "avg_basket_value": 29.94
+    }
+  ],
+  "monthly_revenue": [
+    {
+      "ym": "2016-01",
+      "revenue": 55507.48
+    },
+    {
+      "ym": "2016-02",
+      "revenue": 114855.91
+    },
+    {
+      "ym": "2016-03",
+      "revenue": 221019.5
+    },
+    {
+      "ym": "2016-04",
+      "revenue": 317907.86
+    },
+    {
+      "ym": "2016-05",
+      "revenue": 353811.7
+    },
+    {
+      "ym": "2016-06",
+      "revenue": 356655.89
+    },
+    {
+      "ym": "2016-07",
+      "revenue": 358681.87
+    },
+    {
+      "ym": "2016-08",
+      "revenue": 363831.46
+    },
+    {
+      "ym": "2016-09",
+      "revenue": 370150.79
+    },
+    {
+      "ym": "2016-10",
+      "revenue": 377697.06
+    },
+    {
+      "ym": "2016-11",
+      "revenue": 376631.43
+    },
+    {
+      "ym": "2016-12",
+      "revenue": 379151.79
+    },
+    {
+      "ym": "2017-01",
+      "revenue": 382260.68
+    },
+    {
+      "ym": "2017-02",
+      "revenue": 360094.36
+    },
+    {
+      "ym": "2017-03",
+      "revenue": 397388.76
+    },
+    {
+      "ym": "2017-04",
+      "revenue": 374164.49
+    },
+    {
+      "ym": "2017-05",
+      "revenue": 396781.99
+    },
+    {
+      "ym": "2017-06",
+      "revenue": 368762.28
+    },
+    {
+      "ym": "2017-07",
+      "revenue": 371597.33
+    },
+    {
+      "ym": "2017-08",
+      "revenue": 408236.88
+    },
+    {
+      "ym": "2017-09",
+      "revenue": 386418.86
+    },
+    {
+      "ym": "2017-10",
+      "revenue": 413920.09
+    },
+    {
+      "ym": "2017-11",
+      "revenue": 406566.64
+    },
+    {
+      "ym": "2017-12",
+      "revenue": 145367.98
+    }
+  ],
+  "rfm_rollup": [
+    {
+      "rfm_segment": "Champions",
+      "customers": 523,
+      "avg_ltv": 7198.0,
+      "segment_revenue": 3764331.0
+    },
+    {
+      "rfm_segment": "Needs Attention",
+      "customers": 679,
+      "avg_ltv": 3075.0,
+      "segment_revenue": 2088165.0
+    },
+    {
+      "rfm_segment": "Loyal Customers",
+      "customers": 301,
+      "avg_ltv": 2492.0,
+      "segment_revenue": 750146.0
+    },
+    {
+      "rfm_segment": "At Risk (high value)",
+      "customers": 155,
+      "avg_ltv": 4239.0,
+      "segment_revenue": 657032.0
+    },
+    {
+      "rfm_segment": "Hibernating",
+      "customers": 666,
+      "avg_ltv": 893.0,
+      "segment_revenue": 594739.0
+    },
+    {
+      "rfm_segment": "New / Promising",
+      "customers": 176,
+      "avg_ltv": 1154.0,
+      "segment_revenue": 203050.0
+    }
+  ],
+  "avg_retention_curve": [
+    {
+      "month_index": 0,
+      "retention_pct": 100.0
+    },
+    {
+      "month_index": 1,
+      "retention_pct": 81.6
+    },
+    {
+      "month_index": 2,
+      "retention_pct": 81.0
+    },
+    {
+      "month_index": 3,
+      "retention_pct": 79.7
+    },
+    {
+      "month_index": 4,
+      "retention_pct": 80.0
+    },
+    {
+      "month_index": 5,
+      "retention_pct": 80.1
+    },
+    {
+      "month_index": 6,
+      "retention_pct": 81.5
+    }
+  ],
+  "campaign_ab_test": {
+    "campaign_id": 18,
+    "window_start": "2017-08-10",
+    "window_end": "2017-10-04",
+    "baseline_start": "2017-06-15",
+    "baseline_end": "2017-08-09",
+    "recipients": 1133,
+    "non_recipients": 1367,
+    "treatment_avg_revenue": 461.53,
+    "control_avg_revenue": 155.56,
+    "treatment_baseline_avg_revenue": 426.25,
+    "control_baseline_avg_revenue": 136.84,
+    "raw_uplift_pct": 196.7,
+    "baseline_gap_pct": 211.5,
+    "did_estimate": 16.55,
+    "did_t_statistic": 2.266,
+    "did_p_value": 0.02357,
+    "did_significant": true,
+    "treatment_conversion_rate_pct": 97.4,
+    "control_conversion_rate_pct": 82.6,
+    "significant_at_95": true,
+    "verdict_stamp": "SIGNIFICANT INCREMENTAL LIFT",
+    "verdict_title": "Verdict: Campaign 18 shows a real, if modest, incremental lift once pre-existing spend is controlled for.",
+    "verdict_body": "Recipients already outspent non-recipients by 211.5% BEFORE Campaign 18 began ($426 vs $137 per household) \u2014 consistent with Dunnhumby's documentation that TypeA campaigns are targeted using prior purchase behavior, not randomly assigned. The raw campaign-window comparison shows a 196.7% gap, which naively looks like a huge effect, but a difference-in-differences test (each household's own change in spend, recipients vs. non-recipients) shows an estimated incremental effect of $16.55 per household (t=2.266, p=0.0236), which is statistically significant. Recommendation: the campaign appears to provide a genuine, if modest, incremental lift and can be cautiously scaled with a proper randomized holdout to confirm.",
+    "note": "Recipients not randomly assigned (TypeA campaigns targeted by prior purchase behavior). Raw comparison is confounded; difference-in-differences used to isolate incremental effect."
+  },
+  "category_breakdown": [
+    {
+      "DEPARTMENT": "GROCERY",
+      "line_items": 1646076,
+      "revenue": 4093814.14,
+      "avg_line_value": 2.49
+    },
+    {
+      "DEPARTMENT": "DRUG GM",
+      "line_items": 277232,
+      "revenue": 1055358.03,
+      "avg_line_value": 3.81
+    },
+    {
+      "DEPARTMENT": "PRODUCE",
+      "line_items": 257290,
+      "revenue": 557452.11,
+      "avg_line_value": 2.17
+    },
+    {
+      "DEPARTMENT": "MEAT",
+      "line_items": 88416,
+      "revenue": 548786.81,
+      "avg_line_value": 6.21
+    },
+    {
+      "DEPARTMENT": "KIOSK-GAS",
+      "line_items": 22059,
+      "revenue": 544222.28,
+      "avg_line_value": 24.67
+    },
+    {
+      "DEPARTMENT": "MEAT-PCKGD",
+      "line_items": 111957,
+      "revenue": 412436.77,
+      "avg_line_value": 3.68
+    },
+    {
+      "DEPARTMENT": "DELI",
+      "line_items": 62787,
+      "revenue": 260866.51,
+      "avg_line_value": 4.15
+    },
+    {
+      "DEPARTMENT": "PASTRY",
+      "line_items": 38179,
+      "revenue": 121739.86,
+      "avg_line_value": 3.19
+    },
+    {
+      "DEPARTMENT": "MISC SALES TRAN",
+      "line_items": 6050,
+      "revenue": 119960.04,
+      "avg_line_value": 19.83
+    },
+    {
+      "DEPARTMENT": "NUTRITION",
+      "line_items": 32164,
+      "revenue": 97669.04,
+      "avg_line_value": 3.04
+    },
+    {
+      "DEPARTMENT": "SEAFOOD-PCKGD",
+      "line_items": 11216,
+      "revenue": 63093.62,
+      "avg_line_value": 5.63
+    },
+    {
+      "DEPARTMENT": "FLORAL",
+      "line_items": 4524,
+      "revenue": 39653.34,
+      "avg_line_value": 8.77
+    },
+    {
+      "DEPARTMENT": "COSMETICS",
+      "line_items": 7692,
+      "revenue": 32360.37,
+      "avg_line_value": 4.21
+    },
+    {
+      "DEPARTMENT": "SALAD BAR",
+      "line_items": 9516,
+      "revenue": 30953.3,
+      "avg_line_value": 3.25
+    },
+    {
+      "DEPARTMENT": "SEAFOOD",
+      "line_items": 4093,
+      "revenue": 29496.92,
+      "avg_line_value": 7.21
+    },
+    {
+      "DEPARTMENT": "SPIRITS",
+      "line_items": 2119,
+      "revenue": 21670.88,
+      "avg_line_value": 10.23
+    },
+    {
+      "DEPARTMENT": "MISC. TRANS.",
+      "line_items": 2351,
+      "revenue": 10678.69,
+      "avg_line_value": 4.54
+    },
+    {
+      "DEPARTMENT": "GARDEN CENTER",
+      "line_items": 720,
+      "revenue": 7667.82,
+      "avg_line_value": 10.65
+    },
+    {
+      "DEPARTMENT": "TRAVEL & LEISUR",
+      "line_items": 862,
+      "revenue": 2550.38,
+      "avg_line_value": 2.96
+    },
+    {
+      "DEPARTMENT": "CHEF SHOPPE",
+      "line_items": 766,
+      "revenue": 2290.8,
+      "avg_line_value": 2.99
+    },
+    {
+      "DEPARTMENT": "RESTAURANT",
+      "line_items": 465,
+      "revenue": 1986.76,
+      "avg_line_value": 4.27
+    },
+    {
+      "DEPARTMENT": "COUP/STR & MFG",
+      "line_items": 817,
+      "revenue": 1027.72,
+      "avg_line_value": 1.26
+    },
+    {
+      "DEPARTMENT": "FROZEN GROCERY",
+      "line_items": 251,
+      "revenue": 653.26,
+      "avg_line_value": 2.6
+    },
+    {
+      "DEPARTMENT": "AUTOMOTIVE",
+      "line_items": 65,
+      "revenue": 452.66,
+      "avg_line_value": 6.96
+    },
+    {
+      "DEPARTMENT": "RX",
+      "line_items": 14,
+      "revenue": 159.56,
+      "avg_line_value": 11.4
+    },
+    {
+      "DEPARTMENT": "GM MERCH EXP",
+      "line_items": 49,
+      "revenue": 101.1,
+      "avg_line_value": 2.06
+    },
+    {
+      "DEPARTMENT": "DAIRY DELI",
+      "line_items": 53,
+      "revenue": 73.23,
+      "avg_line_value": 1.38
+    },
+    {
+      "DEPARTMENT": "CNTRL/STORE SUP",
+      "line_items": 21,
+      "revenue": 49.05,
+      "avg_line_value": 2.34
+    },
+    {
+      "DEPARTMENT": "PHOTO",
+      "line_items": 17,
+      "revenue": 41.4,
+      "avg_line_value": 2.44
+    },
+    {
+      "DEPARTMENT": "DELI/SNACK BAR",
+      "line_items": 11,
+      "revenue": 36.08,
+      "avg_line_value": 3.28
+    },
+    {
+      "DEPARTMENT": "VIDEO",
+      "line_items": 3,
+      "revenue": 34.77,
+      "avg_line_value": 11.59
+    },
+    {
+      "DEPARTMENT": "POSTAL CENTER",
+      "line_items": 20,
+      "revenue": 24.01,
+      "avg_line_value": 1.2
+    },
+    {
+      "DEPARTMENT": "VIDEO RENTAL",
+      "line_items": 5,
+      "revenue": 21.46,
+      "avg_line_value": 4.29
+    },
+    {
+      "DEPARTMENT": "PHARMACY SUPPLY",
+      "line_items": 6,
+      "revenue": 16.92,
+      "avg_line_value": 2.82
+    },
+    {
+      "DEPARTMENT": "PORK",
+      "line_items": 2,
+      "revenue": 15.7,
+      "avg_line_value": 7.85
+    },
+    {
+      "DEPARTMENT": "TOYS",
+      "line_items": 5,
+      "revenue": 9.84,
+      "avg_line_value": 1.97
+    },
+    {
+      "DEPARTMENT": "HBC",
+      "line_items": 4,
+      "revenue": 9.42,
+      "avg_line_value": 2.35
+    },
+    {
+      "DEPARTMENT": "CHARITABLE CONT",
+      "line_items": 2,
+      "revenue": 7.74,
+      "avg_line_value": 3.87
+    },
+    {
+      "DEPARTMENT": "PROD-WHS SALES",
+      "line_items": 4,
+      "revenue": 7.52,
+      "avg_line_value": 1.88
+    },
+    {
+      "DEPARTMENT": "MEAT-WHSE",
+      "line_items": 6,
+      "revenue": 7.0,
+      "avg_line_value": 1.17
+    },
+    {
+      "DEPARTMENT": "HOUSEWARES",
+      "line_items": 1,
+      "revenue": 2.99,
+      "avg_line_value": 2.99
+    },
+    {
+      "DEPARTMENT": "GRO BAKERY",
+      "line_items": 2,
+      "revenue": 2.18,
+      "avg_line_value": 1.09
+    },
+    {
+      "DEPARTMENT": "ELECT &PLUMBING",
+      "line_items": 1,
+      "revenue": 1.0,
+      "avg_line_value": 1.0
+    },
+    {
+      "DEPARTMENT": " ",
+      "line_items": 7839,
+      "revenue": 0.0,
+      "avg_line_value": 0.0
+    }
+  ],
+  "store_performance": [
+    {
+      "store_id": 367,
+      "households": 264,
+      "total_revenue": 267614.34,
+      "revenue_per_household": 1013.69
+    },
+    {
+      "store_id": 406,
+      "households": 134,
+      "total_revenue": 216781.77,
+      "revenue_per_household": 1617.77
+    },
+    {
+      "store_id": 361,
+      "households": 98,
+      "total_revenue": 144698.85,
+      "revenue_per_household": 1476.52
+    },
+    {
+      "store_id": 429,
+      "households": 99,
+      "total_revenue": 142391.01,
+      "revenue_per_household": 1438.29
+    },
+    {
+      "store_id": 343,
+      "households": 237,
+      "total_revenue": 140455.75,
+      "revenue_per_household": 592.64
+    },
+    {
+      "store_id": 356,
+      "households": 111,
+      "total_revenue": 137588.68,
+      "revenue_per_household": 1239.54
+    },
+    {
+      "store_id": 381,
+      "households": 278,
+      "total_revenue": 132488.15,
+      "revenue_per_household": 476.58
+    },
+    {
+      "store_id": 375,
+      "households": 217,
+      "total_revenue": 130396.51,
+      "revenue_per_household": 600.91
+    },
+    {
+      "store_id": 292,
+      "households": 194,
+      "total_revenue": 130005.18,
+      "revenue_per_household": 670.13
+    },
+    {
+      "store_id": 31782,
+      "households": 137,
+      "total_revenue": 121726.54,
+      "revenue_per_household": 888.51
+    },
+    {
+      "store_id": 319,
+      "households": 196,
+      "total_revenue": 117782.21,
+      "revenue_per_household": 600.93
+    },
+    {
+      "store_id": 321,
+      "households": 148,
+      "total_revenue": 117337.37,
+      "revenue_per_household": 792.82
+    },
+    {
+      "store_id": 323,
+      "households": 71,
+      "total_revenue": 116672.42,
+      "revenue_per_household": 1643.27
+    },
+    {
+      "store_id": 32004,
+      "households": 163,
+      "total_revenue": 116392.44,
+      "revenue_per_household": 714.06
+    },
+    {
+      "store_id": 369,
+      "households": 171,
+      "total_revenue": 115743.39,
+      "revenue_per_household": 676.86
+    },
+    {
+      "store_id": 427,
+      "households": 135,
+      "total_revenue": 108389.4,
+      "revenue_per_household": 802.88
+    },
+    {
+      "store_id": 327,
+      "households": 115,
+      "total_revenue": 106522.19,
+      "revenue_per_household": 926.28
+    },
+    {
+      "store_id": 372,
+      "households": 224,
+      "total_revenue": 106189.31,
+      "revenue_per_household": 474.06
+    },
+    {
+      "store_id": 432,
+      "households": 109,
+      "total_revenue": 103186.08,
+      "revenue_per_household": 946.66
+    },
+    {
+      "store_id": 384,
+      "households": 153,
+      "total_revenue": 101058.79,
+      "revenue_per_household": 660.51
+    }
+  ],
+  "totals": {
+    "total_customers": 2500,
+    "total_baskets": 276484,
+    "total_revenue": 8057463.08,
+    "demographics_coverage_pct": 32.0
+  }
+};

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RetailPulse — Analytics Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#1B2A4A;
+    --ink-soft:#2E3F63;
+    --paper:#F7F5EF;
+    --panel:#FFFFFF;
+    --marigold:#E8973E;
+    --marigold-soft:#FBEBD4;
+    --teal:#3E7C7C;
+    --teal-soft:#E1EEEC;
+    --coral:#D45B45;
+    --coral-soft:#FBE4DE;
+    --line:#E4E0D6;
+    --text:#22252B;
+    --text-mute:#6B7180;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .shell{display:flex; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:230px; flex-shrink:0; background:var(--ink); color:#EDEBE3;
+    padding:28px 20px; position:sticky; top:0; height:100vh;
+    display:flex; flex-direction:column;
+  }
+  .brand{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:19px; letter-spacing:-0.01em;}
+  .brand span{color:var(--marigold);}
+  .brand-sub{font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:#9BA3BD; margin-top:4px; letter-spacing:0.02em;}
+  nav{margin-top:36px; display:flex; flex-direction:column; gap:2px;}
+  .nav-item{
+    font-size:13.5px; padding:10px 12px; border-radius:7px; cursor:pointer;
+    color:#C6CADC; transition:background .15s, color .15s; font-weight:500;
+    display:flex; align-items:center; gap:9px;
+  }
+  .nav-item .dot{width:5px; height:5px; border-radius:50%; background:#5A628A; flex-shrink:0;}
+  .nav-item:hover{background:rgba(255,255,255,0.06); color:#fff;}
+  .nav-item.active{background:rgba(232,151,62,0.16); color:var(--marigold);}
+  .nav-item.active .dot{background:var(--marigold);}
+  .sidebar-foot{margin-top:auto; font-size:11px; color:#7F87A6; line-height:1.5; padding-top:20px; border-top:1px solid rgba(255,255,255,0.08);}
+
+  /* ---------- Main ---------- */
+  main{flex:1; padding:34px 42px 60px; max-width:1180px;}
+  .page-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:26px; flex-wrap:wrap; gap:12px;}
+  .page-title{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:26px;}
+  .page-desc{color:var(--text-mute); font-size:13.5px; margin-top:4px; max-width:560px;}
+  .refresh{font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--text-mute); background:var(--panel); border:1px solid var(--line); padding:7px 12px; border-radius:20px;}
+
+  .section{display:none;}
+  .section.active{display:block; animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ---------- KPI cards ---------- */
+  .kpi-row{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:24px;}
+  .kpi-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px;}
+  .kpi-label{font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-mute); font-weight:600;}
+  .kpi-value{font-family:'Space Grotesk', sans-serif; font-size:26px; font-weight:700; margin-top:8px;}
+  .kpi-delta{font-family:'IBM Plex Mono', monospace; font-size:11.5px; margin-top:6px; color:var(--teal);}
+  .kpi-delta.down{color:var(--coral);}
+
+  /* ---------- Panels ---------- */
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:22px 24px; margin-bottom:20px;}
+  .panel-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; flex-wrap:wrap; gap:6px;}
+  .panel-title{font-family:'Space Grotesk', sans-serif; font-weight:600; font-size:15.5px;}
+  .panel-note{font-size:12px; color:var(--text-mute);}
+  .grid-2{display:grid; grid-template-columns:1.3fr 1fr; gap:20px;}
+  canvas{max-width:100%;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--text-mute); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--line);}
+  td{padding:9px 10px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono', monospace; font-size:12.5px;}
+  td.label{font-family:'IBM Plex Sans', sans-serif; font-weight:500;}
+  tr:last-child td{border-bottom:none;}
+  .tag{display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:600; font-family:'IBM Plex Sans', sans-serif;}
+  .tag.champions{background:var(--marigold-soft); color:#9A5F13;}
+  .tag.loyal{background:var(--teal-soft); color:#255050;}
+  .tag.risk{background:var(--coral-soft); color:#9A3A26;}
+  .tag.hib{background:#EDEBE5; color:#6B7180;}
+  .tag.new{background:#E5EAF7; color:#3B4E8C;}
+  .tag.attn{background:#F3EEDF; color:#8A7327;}
+
+  /* ---------- Verdict card (signature element) ---------- */
+  .verdict{
+    border:1px dashed var(--teal); border-radius:12px; background:var(--teal-soft);
+    padding:22px 26px; position:relative; margin-bottom:20px;
+  }
+  .verdict-stamp{
+    position:absolute; top:18px; right:22px; font-family:'IBM Plex Mono', monospace;
+    font-size:11px; font-weight:600; color:var(--teal); border:1.5px solid var(--teal);
+    border-radius:6px; padding:4px 10px; transform:rotate(4deg); letter-spacing:0.04em;
+  }
+  .verdict-title{font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:17px; color:#1F4747; max-width:560px;}
+  .verdict-body{font-size:13.5px; color:#1F4747; margin-top:10px; line-height:1.6; max-width:660px;}
+  .verdict-stats{display:flex; gap:28px; margin-top:16px; flex-wrap:wrap;}
+  .vstat-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:#3F6B6B;}
+  .vstat-value{font-family:'IBM Plex Mono', monospace; font-size:16px; font-weight:600; color:#1F4747; margin-top:2px;}
+
+  .method-note{font-size:12px; color:var(--text-mute); background:#F2F0E8; border-radius:8px; padding:12px 14px; margin-top:14px; line-height:1.6;}
+  .method-note b{color:var(--text);}
+
+  @media(max-width:900px){
+    .shell{flex-direction:column;}
+    .sidebar{width:100%; height:auto; position:relative; flex-direction:row; overflow-x:auto; padding:16px;}
+    nav{flex-direction:row; margin-top:0; gap:6px;}
+    .sidebar-foot{display:none;}
+    main{padding:24px 18px;}
+    .kpi-row{grid-template-columns:repeat(2,1fr);}
+    .grid-2{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div>
+      <div class="brand">Retail<span>Pulse</span></div>
+      <div class="brand-sub">ANALYTICS · FY24–FY25</div>
+    </div>
+    <nav>
+      <div class="nav-item active" data-target="overview"><span class="dot"></span>Overview</div>
+      <div class="nav-item" data-target="segments"><span class="dot"></span>Customer Segments</div>
+      <div class="nav-item" data-target="retention"><span class="dot"></span>Retention</div>
+      <div class="nav-item" data-target="campaign"><span class="dot"></span>Campaign Test</div>
+      <div class="nav-item" data-target="category"><span class="dot"></span>Category &amp; Region</div>
+      <div class="nav-item" data-target="channels"><span class="dot"></span>Acquisition Channels</div>
+    </nav>
+    <div class="sidebar-foot">
+      Data warehouse: SQLite (retailpulse.db)<br>
+      6,000 customers · 31,718 orders<br>
+      Built by Rishi Popawala
+    </div>
+  </aside>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section class="section active" id="overview">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Business Overview</div>
+          <div class="page-desc">Two-year performance snapshot across revenue, orders, and active customers.</div>
+        </div>
+        <div class="refresh">FY2024 – FY2025</div>
+      </div>
+      <div class="kpi-row" id="kpiRow"></div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Monthly Net Revenue</div>
+          <div class="panel-note">Returns excluded · ₹, Jan 2024 – Dec 2025</div>
+        </div>
+        <canvas id="revenueChart" height="90"></canvas>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Revenue by Product Category</div>
+          <div class="panel-note">Mobiles &amp; Electronics drive ~70% of net revenue</div>
+        </div>
+        <canvas id="categoryChart" height="80"></canvas>
+      </div>
+    </section>
+
+    <!-- SEGMENTS -->
+    <section class="section" id="segments">
+      <div class="page-head">
+        <div>
+          <div class="page-title">RFM Customer Segmentation</div>
+          <div class="page-desc">Recency / Frequency / Monetary quintile scoring, bucketed into six lifecycle segments via SQL window functions.</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Revenue Contribution by Segment</div></div>
+          <canvas id="rfmChart" height="110"></canvas>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">Segment Breakdown</div></div>
+          <table id="rfmTable"><thead><tr><th>Segment</th><th>Customers</th><th>Avg LTV</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="method-note"><b>Method:</b> recency_days, frequency, and monetary value computed per customer, each scored 1–5 via <code>NTILE(5)</code>. Segments follow the standard RFM heuristic (e.g. Champions = top quintile on all three axes). See <code>03_analysis_queries.sql</code>, query 3.</div>
+    </section>
+
+    <!-- RETENTION -->
+    <section class="section" id="retention">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Cohort Retention</div>
+          <div class="page-desc">% of each signup cohort still placing orders N months after signup, averaged across all cohorts.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Average Retention Curve (Month 0–6)</div></div>
+        <canvas id="retentionChart" height="90"></canvas>
+      </div>
+      <div class="method-note"><b>Reading it:</b> Month 0 (signup month itself, partial period) is naturally lower than Month 1 — the first full month after signup is peak engagement, after which retention decays and stabilizes around <b>~32%</b> by Month 6. This is the natural point to trigger win-back campaigns, before further decay sets in.</div>
+    </section>
+
+    <!-- CAMPAIGN -->
+    <section class="section" id="campaign">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Campaign A/B Test — Feb 2025 Flash Discount</div>
+          <div class="page-desc">Randomized 50/50 split of eligible customers into treatment (received 10–20% discount email) vs. control (no email). Intent-to-treat: every assigned customer counts, including non-purchasers. Welch's t-test on revenue per assigned customer.</div>
+        </div>
+      </div>
+      <div class="verdict" id="verdictCard"></div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Avg. Revenue per Customer — Treatment vs. Control</div><div class="panel-note">Error bars = 95% confidence interval</div></div>
+        <canvas id="campaignChart" height="90"></canvas>
+      </div>
+    </section>
+
+    <!-- CATEGORY / REGION -->
+    <section class="section" id="category">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Category Performance by Region Tier</div>
+          <div class="page-desc">Revenue, order volume, and return rate split across Tier 1 / 2 / 3 Indian cities.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <table id="categoryTable">
+          <thead><tr><th>Region Tier</th><th>Category</th><th>Orders</th><th>Revenue</th><th>Avg Order Value</th><th>Return Rate</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CHANNELS -->
+    <section class="section" id="channels">
+      <div class="page-head">
+        <div>
+          <div class="page-title">Acquisition Channel Efficiency</div>
+          <div class="page-desc">Customers acquired and revenue-per-customer by marketing channel.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <canvas id="channelChart" height="90"></canvas>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="embedded_data.js"></script>
+<script>
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+Chart.defaults.color = '#6B7180';
+Chart.defaults.font.size = 11.5;
+
+const inr = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const inrCr = n => '₹' + (n/10000000).toFixed(2) + ' Cr';
+
+// ---- Nav ----
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById(item.dataset.target).classList.add('active');
+  });
+});
+
+// ---- KPI cards ----
+const y24 = DATA.kpi_by_year.find(k=>k.order_year==='2024');
+const y25 = DATA.kpi_by_year.find(k=>k.order_year==='2025');
+const revGrowth = ((y25.net_revenue - y24.net_revenue)/y24.net_revenue*100).toFixed(1);
+const custGrowth = ((y25.active_customers - y24.active_customers)/y24.active_customers*100).toFixed(1);
+document.getElementById('kpiRow').innerHTML = `
+  <div class="kpi-card"><div class="kpi-label">Total Net Revenue</div><div class="kpi-value">${inrCr(DATA.totals.total_revenue)}</div><div class="kpi-delta">FY24–25 combined</div></div>
+  <div class="kpi-card"><div class="kpi-label">FY25 Revenue Growth</div><div class="kpi-value">+${revGrowth}%</div><div class="kpi-delta">vs. FY24 (${inrCr(y24.net_revenue)} → ${inrCr(y25.net_revenue)})</div></div>
+  <div class="kpi-card"><div class="kpi-label">Active Customers (FY25)</div><div class="kpi-value">${y25.active_customers.toLocaleString('en-IN')}</div><div class="kpi-delta">+${custGrowth}% YoY</div></div>
+  <div class="kpi-card"><div class="kpi-label">Return Rate</div><div class="kpi-value">${DATA.totals.return_rate_pct}%</div><div class="kpi-delta down">Fashion category highest</div></div>
+`;
+
+// ---- Revenue trend ----
+new Chart(document.getElementById('revenueChart'), {
+  type:'line',
+  data:{
+    labels: DATA.monthly_revenue.map(d=>d.ym),
+    datasets:[{
+      data: DATA.monthly_revenue.map(d=>d.revenue),
+      borderColor:'#E8973E', backgroundColor:'rgba(232,151,62,0.12)',
+      fill:true, tension:0.3, pointRadius:0, borderWidth:2.5
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>inr(c.raw)}}},
+    scales:{
+      y:{ticks:{callback:v=>inrCr(v)}, grid:{color:'#EEEBE0'}},
+      x:{grid:{display:false}, ticks:{maxRotation:0, autoSkip:true, maxTicksLimit:12}}
+    }
+  }
+});
+
+// ---- Category revenue ----
+new Chart(document.getElementById('categoryChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.category_total.map(d=>d.product_category),
+    datasets:[{data: DATA.category_total.map(d=>d.revenue), backgroundColor:'#3E7C7C', borderRadius:5, maxBarThickness:44}]
+  },
+  options:{
+    indexAxis:'y',
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>inr(c.raw)}}},
+    scales:{x:{ticks:{callback:v=>inrCr(v)}, grid:{color:'#EEEBE0'}}, y:{grid:{display:false}}}
+  }
+});
+
+// ---- RFM ----
+const segColors = {
+  'Champions':'#E8973E','Loyal Customers':'#3E7C7C','At Risk (high value)':'#D45B45',
+  'Hibernating':'#B7BAC4','New / Promising':'#5C74C7','Needs Attention':'#C7A94B'
+};
+new Chart(document.getElementById('rfmChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.rfm_rollup.map(d=>d.rfm_segment),
+    datasets:[{data: DATA.rfm_rollup.map(d=>d.segment_revenue), backgroundColor: DATA.rfm_rollup.map(d=>segColors[d.rfm_segment]), borderRadius:6, maxBarThickness:52}]
+  },
+  options:{
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>inr(c.raw)}}},
+    scales:{y:{ticks:{callback:v=>inrCr(v)}, grid:{color:'#EEEBE0'}}, x:{grid:{display:false}, ticks:{font:{size:10.5}}}}
+  }
+});
+const tagClass = {'Champions':'champions','Loyal Customers':'loyal','At Risk (high value)':'risk','Hibernating':'hib','New / Promising':'new','Needs Attention':'attn'};
+document.querySelector('#rfmTable tbody').innerHTML = DATA.rfm_rollup.map(d=>`
+  <tr><td class="label"><span class="tag ${tagClass[d.rfm_segment]}">${d.rfm_segment}</span></td><td>${d.customers.toLocaleString('en-IN')}</td><td>${inr(d.avg_ltv)}</td></tr>
+`).join('');
+
+// ---- Retention ----
+new Chart(document.getElementById('retentionChart'), {
+  type:'line',
+  data:{
+    labels: DATA.avg_retention_curve.map(d=>'Month '+d.month_index),
+    datasets:[{data: DATA.avg_retention_curve.map(d=>d.retention_pct), borderColor:'#3E7C7C', backgroundColor:'rgba(62,124,124,0.12)', fill:true, tension:0.35, pointRadius:4, pointBackgroundColor:'#3E7C7C', borderWidth:2.5}]
+  },
+  options:{
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>c.raw+'%'}}},
+    scales:{y:{ticks:{callback:v=>v+'%'}, grid:{color:'#EEEBE0'}, suggestedMax:60}, x:{grid:{display:false}}}
+  }
+});
+
+// ---- Campaign verdict + chart ----
+const c = DATA.campaign_ab_test;
+document.getElementById('verdictCard').innerHTML = `
+  <div class="verdict-stamp">${c.significant_at_95 ? 'STATISTICALLY SIGNIFICANT' : 'NOT SIGNIFICANT'}</div>
+  <div class="verdict-title">Verdict: the discount campaign worked — recommend scaling it beyond the pilot.</div>
+  <div class="verdict-body">On an intent-to-treat basis (every assigned customer counted, including non-purchasers), treatment customers generated <b>${c.uplift_pct}% more revenue</b> per assigned customer than control (₹${c.treatment_avg_revenue.toLocaleString('en-IN')} vs ₹${c.control_avg_revenue.toLocaleString('en-IN')}), confirmed by a two-sample Welch's t-test (p < 0.001). The effect is driven almost entirely by conversion: <b>${c.treatment_conversion_rate_pct}%</b> of treatment customers purchased in the window vs. <b>${c.control_conversion_rate_pct}%</b> of control (χ² p < 0.001) — the discount brought in incremental buyers rather than just subsidizing existing demand.</div>
+  <div class="verdict-stats">
+    <div><div class="vstat-label">Treatment avg. revenue</div><div class="vstat-value">${inr(c.treatment_avg_revenue)}</div></div>
+    <div><div class="vstat-label">Control avg. revenue</div><div class="vstat-value">${inr(c.control_avg_revenue)}</div></div>
+    <div><div class="vstat-label">Treatment conversion</div><div class="vstat-value">${c.treatment_conversion_rate_pct}%</div></div>
+    <div><div class="vstat-label">Control conversion</div><div class="vstat-value">${c.control_conversion_rate_pct}%</div></div>
+  </div>
+`;
+new Chart(document.getElementById('campaignChart'), {
+  type:'bar',
+  data:{
+    labels:['Treatment (10–20% off)', 'Control (no discount)'],
+    datasets:[{
+      data:[c.treatment_avg_revenue, c.control_avg_revenue],
+      backgroundColor:['#3E7C7C','#B7BAC4'], borderRadius:6, maxBarThickness:90
+    }]
+  },
+  options:{
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:x=>inr(x.raw)+' per assigned customer'}}},
+    scales:{y:{ticks:{callback:v=>inr(v)}, grid:{color:'#EEEBE0'}}, x:{grid:{display:false}}}
+  }
+});
+
+// ---- Category / Region table ----
+document.querySelector('#categoryTable tbody').innerHTML = DATA.category_region.map(d=>`
+  <tr>
+    <td class="label">${d.region_tier}</td>
+    <td class="label">${d.product_category}</td>
+    <td>${d.orders.toLocaleString('en-IN')}</td>
+    <td>${inr(d.revenue)}</td>
+    <td>${inr(d.avg_order_value)}</td>
+    <td>${d.return_rate_pct}%</td>
+  </tr>
+`).join('');
+
+// ---- Channels ----
+new Chart(document.getElementById('channelChart'), {
+  type:'bar',
+  data:{
+    labels: DATA.channel_performance.map(d=>d.acquisition_channel),
+    datasets:[{data: DATA.channel_performance.map(d=>d.revenue_per_customer), backgroundColor:'#E8973E', borderRadius:6, maxBarThickness:50}]
+  },
+  options:{
+    indexAxis:'y',
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label:x=>inr(x.raw)+' / customer'}}},
+    scales:{x:{ticks:{callback:v=>inr(v)}, grid:{color:'#EEEBE0'}}, y:{grid:{display:false}}}
+  }
+});
+</script>
+</body>
+</html>

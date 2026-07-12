@@ -1,0 +1,26 @@
+﻿# Raw source data
+real-data/raw/
+
+# Environments
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor/IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+real-data/retailpulse_real.db
